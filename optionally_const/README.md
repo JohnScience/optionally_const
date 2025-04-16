@@ -127,8 +127,7 @@ fn main() {
 }
 ```
 
-*Note: to migitate this problem, this crate should ideally provide a derive macro
-that should be applied to enums. However, there's no such derive macro at the time of writing.*
+*Note: this can be done even easier with the `FieldlessEnumConstType` derive macro, which is exposed when the `derive` feature is enabled.*
 
 ## Read more about keyword genericity
 
