@@ -129,9 +129,14 @@ fn main() {
 
 *Note: this can be done even easier with the `FieldlessEnumConstType` derive macro, which is exposed when the `derive` feature is enabled.*
 
+## Use cases
+
+* **More generic const parameters**: at the moment of writing, only a handful of types can be used as [generic const parameters]. However, with this crate, you can accept `T: Const<U>` where `U` is an enum type.
+
 ## Read more about keyword genericity
 
 * <https://blog.rust-lang.org/inside-rust/2022/07/27/keyword-generics/>
 
 [\[E770\]]: https://doc.rust-lang.org/stable/error_codes/E0770.html
 [negative trait bounds]: https://doc.rust-lang.org/beta/unstable-book/language-features/negative-bounds.html
+[generic const parameters]: https://doc.rust-lang.org/reference/items/generics.html#const-generics

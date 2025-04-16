@@ -16,23 +16,23 @@ pub mod hidden {
 }
 
 /// A convenience type alias that represents a constant boolean value.
-/// 
+///
 /// Ideally, this should be a partial parametrization of
 /// `struct ConstType<T, const VAL: T>` with `T = bool`.
-/// 
+///
 /// However, defining such a struct is impossible in Rust at the time
 /// of writing this code.
 pub type ConstTypeBool<const VAL: bool> = hidden::ConstTypeBool<VAL>;
 
 /// A trait that can be used to represent a type that is either
 /// type `T` or a type that represents a constant value of type `T`.
-/// 
+///
 /// I.e. `OptionallyConst<T>` is either `T` or `U: Const<T>`.
-/// 
+///
 /// See the [`Const`] trait for more information.
 pub trait OptionallyConst<T> {
     /// An optional constant value of type `T`.
-    /// 
+    ///
     /// If the type does not represent a constant
     /// (i.e. does not implement [`Const`]), this will be `None`.
     const MAYBE_CONST: Option<T>;
@@ -55,7 +55,7 @@ impl<const VAL: bool> Const<bool> for ConstTypeBool<VAL> {
 
 impl<T> OptionallyConst<T> for T {
     const MAYBE_CONST: Option<T> = None;
-    
+
     fn into_value(self) -> T {
         self
     }
@@ -67,7 +67,7 @@ impl<T> OptionallyConst<T> for T {
 //     U: Const<T>,
 // {
 //     const MAYBE_CONST: Option<T> = Some(U::VALUE);
-// 
+//
 //     fn into_value(self) -> T {
 //         U::VALUE
 //     }
@@ -82,10 +82,10 @@ impl<const VAL: bool> OptionallyConst<bool> for ConstTypeBool<VAL> {
 }
 
 /// Returns an instance of the type that represents the constant.
-/// 
+///
 /// At the moment of writing, the macro cannot support user-defined types
 /// implementing the [`Const`] trait.
-/// 
+///
 /// However, you still can construct instances of types that represent
 /// constant values of type `T` manually.
 #[macro_export]
@@ -128,7 +128,7 @@ mod tests {
         B,
         C,
     }
-    
+
     impl std::fmt::Display for MyEnum {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
@@ -138,47 +138,47 @@ mod tests {
             }
         }
     }
-    
+
     struct MyEnumAConstType;
     struct MyEnumBConstType;
     struct MyEnumCConstType;
-    
+
     impl Const<MyEnum> for MyEnumAConstType {
         const VALUE: MyEnum = MyEnum::A;
     }
 
     impl OptionallyConst<MyEnum> for MyEnumAConstType {
         const MAYBE_CONST: Option<MyEnum> = Some(MyEnum::A);
-    
+
         fn into_value(self) -> MyEnum {
             MyEnum::A
         }
     }
-    
+
     impl Const<MyEnum> for MyEnumBConstType {
         const VALUE: MyEnum = MyEnum::B;
     }
 
     impl OptionallyConst<MyEnum> for MyEnumBConstType {
         const MAYBE_CONST: Option<MyEnum> = Some(MyEnum::B);
-    
+
         fn into_value(self) -> MyEnum {
             MyEnum::B
         }
     }
-    
+
     impl Const<MyEnum> for MyEnumCConstType {
         const VALUE: MyEnum = MyEnum::C;
     }
 
     impl OptionallyConst<MyEnum> for MyEnumCConstType {
         const MAYBE_CONST: Option<MyEnum> = Some(MyEnum::C);
-    
+
         fn into_value(self) -> MyEnum {
             MyEnum::C
         }
     }
-    
+
     fn print_my_enum<T: OptionallyConst<MyEnum>>(value: T) {
         if let Some(value) = T::MAYBE_CONST {
             println!("value is const: {value}");
