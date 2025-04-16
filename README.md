@@ -1,5 +1,11 @@
 # Optional const
 
+[![Crates.io](https://img.shields.io/crates/v/optionally_const)](https://crates.io/crates/optionally_const)
+[![Downloads](https://img.shields.io/crates/d/optionally_const.svg)](https://crates.io/crates/optionally_const)
+[![Documentation](https://docs.rs/optionally_const/badge.svg)](https://docs.rs/optionally_const)
+[![License](https://img.shields.io/crates/l/optionally_const)](https://crates.io/crates/optionally_const)
+[![Dependency Status](https://deps.rs/repo/github/JohnScience/optionally_const/status.svg)](https://deps.rs/repo/github/JohnScience/optionally_const)
+
 Optional constness on stable Rust.
 
 This crate should be superseded by [keyword genericity](#read-more-about-keyword-genericity) in the future.
