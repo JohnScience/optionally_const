@@ -17,3 +17,13 @@ categories = [
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/JohnScience/optionally_const"
+
+[dependencies]
+optionally_const_macros = { path = "../optionally_const_macros", optional = true}
+
+[features]
+derive = ["dep:optionally_const_macros"]
+
+[package.metadata.docs.rs]
+features = ["derive"]
+rustdoc-args = ["--cfg", "docsrs"]

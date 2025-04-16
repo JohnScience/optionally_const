@@ -1,4 +1,10 @@
 #![doc = include_str!("../README.md")]
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
+#[cfg(feature = "derive")]
+#[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
+pub use optionally_const_macros::FieldlessEnumConstType;
 
 // struct ConstType<T, const VAL: T>;
 

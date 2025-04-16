@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "optionally_const",
+    "optionally_const", "optionally_const_macros", "optionally_const_tests",
 ]
 resolver = "2"

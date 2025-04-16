@@ -1,0 +1,15 @@
+[package]
+name = "optionally_const_macros"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# 2.0.100
+syn = { version = "2", features = ["full"] }
+# 1.0.40
+quote = "1"
+# 1.0.95
+proc-macro2 = "1"
+
+[lib]
+proc-macro = true
