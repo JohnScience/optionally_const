@@ -2,6 +2,20 @@
 name = "optionally_const_macros"
 version = "0.2.0"
 edition = "2024"
+authors = ["Dmitrii Demenev <demenev.dmitriy1@gmail.com>"]
+description = "Proc-macro crate for optionally_const."
+documentation = "https://docs.rs/optionally_const_macros"
+readme = "README.md"
+keywords = [
+    "optional",
+    "const",
+    "maybe",
+]
+categories = [
+    "rust-patterns",
+]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/JohnScience/optionally_const"
 
 [dependencies]
 # 2.0.100
