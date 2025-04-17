@@ -54,7 +54,8 @@ The const type for a constant value `const VAL: T` is stipulatively defined as t
 ```rust
 use optionally_const::{OptionallyConst, FieldlessEnumConstType};
 
-#[derive(FieldlessEnumConstType, Debug)]
+// Clone and Copy derives are required for the derive macro to work.
+#[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
 #[const_type(ConstTypeName)]
 enum FieldlessEnum {
     A,
@@ -82,7 +83,7 @@ fn main() {
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::B as usize }>);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::C as usize }>);
 
-    let Some(_const_type_instance) = FieldlessEnum::A.try_into_const_type_instance::<{FieldlessEnum::A as usize}>() else {
+    let Ok(_const_type_instance) = FieldlessEnum::A.try_into_const_type_instance::<{FieldlessEnum::A as usize}>() else {
         panic!("The conversion from a variant to a corresponding const type instance failed");
     };
 }
@@ -91,7 +92,7 @@ fn main() {
 #### Using a manual implementation
 
 ```rust
-use optionally_const::Const;
+use optionally_const::{Const, OptionallyConst};
 
 enum MyEnum {
     A,
@@ -130,6 +131,14 @@ impl OptionallyConst<MyEnum> for MyEnumAConstType {
     fn into_value(self) -> MyEnum {
         MyEnum::A
     }
+
+    fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+        if matches!(value, MyEnum::A) {
+            Ok(MyEnumAConstType)
+        } else {
+            Err(value)
+        }
+    }
 }
 
 impl Const<MyEnum> for MyEnumBConstType {
@@ -142,6 +151,14 @@ impl OptionallyConst<MyEnum> for MyEnumBConstType {
     fn into_value(self) -> MyEnum {
         MyEnum::B
     }
+
+    fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+        if matches!(value, MyEnum::B) {
+            Ok(MyEnumBConstType)
+        } else {
+            Err(value)
+        }
+    }
 }
 
 impl Const<MyEnum> for MyEnumCConstType {
@@ -153,6 +170,14 @@ impl OptionallyConst<MyEnum> for MyEnumCConstType {
 
     fn into_value(self) -> MyEnum {
         MyEnum::C
+    }
+
+    fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+        if matches!(value, MyEnum::C) {
+            Ok(MyEnumCConstType)
+        } else {
+            Err(value)
+        }
     }
 }
 

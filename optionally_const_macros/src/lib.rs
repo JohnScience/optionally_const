@@ -46,13 +46,15 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// of the [`Const`] and [`OptionallyConst`] traits for the parameterizations
 /// of the [const type] that represent the enum variants.
 ///
+/// The fieldless enum also must derive the [`Clone`] and [`Copy`] traits.
+///
 /// # Example
 ///
 /// ```rust
 /// use optionally_const::OptionallyConst;
 /// use optionally_const_macros::FieldlessEnumConstType;
 ///
-/// #[derive(FieldlessEnumConstType, Debug)]
+/// #[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
 /// #[const_type(ConstTypeName)]
 /// enum FieldlessEnum {
 ///     A,
@@ -86,7 +88,7 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
 /// [`Const`]: https://docs.rs/optionally_const/latest/optionally_const/trait.Const.html
 /// [`OptionallyConst`]: https://docs.rs/optionally_const/latest/optionally_const/trait.OptionallyConst.html
-#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::missing_panics_doc, clippy::too_many_lines)]
 #[proc_macro_derive(FieldlessEnumConstType, attributes(const_type))]
 pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input as DeriveInput);
@@ -167,6 +169,11 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
                     \n\
                     For example, `", stringify!(try_into_const_type_instance), "::<{",stringify!(#ident),"::Variant as usize}>()`.\n\
                     \n\
+                    # Errors\n\
+                    \n\
+                    This function returns the original enum variant wrapped in [`Err`] if the \
+                    discriminant of the enum variant does not match the discriminant of the const type instance.\n\
+                    \n\
                     This function is defined on the enum rather than implemented as a trait method \
                     because at the time of writing this code, it's impossible to make the trait method `const`.\n\
                     \n\
@@ -175,14 +182,14 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
             #vis const fn try_into_const_type_instance<const DISCRIMINANT: usize>
             (
                 self
-            ) -> Option<#const_type_ident<DISCRIMINANT>>
+            ) -> ::core::result::Result<#const_type_ident<DISCRIMINANT>, Self>
             where
                 #const_type_ident<DISCRIMINANT>: ::optionally_const::Const<#ident>,
             {
                 if self as usize == DISCRIMINANT {
-                    Some(#const_type_ident::<DISCRIMINANT>)
+                    Ok(#const_type_ident::<DISCRIMINANT>)
                 } else {
-                    None
+                    Err(self)
                 }
             }
         }
@@ -195,6 +202,14 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
 
                 fn into_value(self) -> #ident {
                     #ident::#variants
+                }
+
+                fn try_from_value(value: #ident) -> Result<Self, #ident> {
+                    if matches!(<Self as ::optionally_const::Const<#ident>>::VALUE, value) {
+                        Ok(#const_type_ident)
+                    } else {
+                        Err(value)
+                    }
                 }
             }
         )*

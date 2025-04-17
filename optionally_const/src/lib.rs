@@ -30,7 +30,7 @@ pub type ConstTypeBool<const VAL: bool> = hidden::ConstTypeBool<VAL>;
 /// I.e. `OptionallyConst<T>` is either `T` or `U: Const<T>`.
 ///
 /// See the [`Const`] trait for more information.
-pub trait OptionallyConst<T> {
+pub trait OptionallyConst<T>: Sized {
     /// An optional constant value of type `T`.
     ///
     /// If the type does not represent a constant
@@ -39,6 +39,14 @@ pub trait OptionallyConst<T> {
 
     /// Converts the instance of the type into a value of type `T`.
     fn into_value(self) -> T;
+
+    /// Converts the value of type `T` into an instance of the type.
+    ///
+    /// # Errors
+    ///
+    /// If the value does not match the value of the optionally constant
+    /// type instance, this function will return an error.
+    fn try_from_value(value: T) -> Result<Self, T>;
 }
 
 /// A trait whose types-implementors represent a constant value of type `T`.
@@ -59,6 +67,10 @@ impl<T> OptionallyConst<T> for T {
     fn into_value(self) -> T {
         self
     }
+
+    fn try_from_value(value: T) -> Result<Self, T> {
+        Ok(value)
+    }
 }
 
 // The following impl requires negative trait bounds.
@@ -78,6 +90,14 @@ impl<const VAL: bool> OptionallyConst<bool> for ConstTypeBool<VAL> {
 
     fn into_value(self) -> bool {
         VAL
+    }
+
+    fn try_from_value(value: bool) -> Result<Self, bool> {
+        if value == VAL {
+            Ok(crate::hidden::ConstTypeBool::<VAL>)
+        } else {
+            Err(value)
+        }
     }
 }
 
@@ -143,6 +163,13 @@ mod tests {
     struct MyEnumBConstType;
     struct MyEnumCConstType;
 
+    // Ideally, OptionallyConst<T> should be implemented for
+    // all types that implement Const<T>.
+    //
+    // However, impl of OptionallyConst<T> for all `T` conflicts with the
+    // impl of OptionallyConst<T> for all `U: Const<T>` in the absence of
+    // negative trait bounds.
+
     impl Const<MyEnum> for MyEnumAConstType {
         const VALUE: MyEnum = MyEnum::A;
     }
@@ -152,6 +179,14 @@ mod tests {
 
         fn into_value(self) -> MyEnum {
             MyEnum::A
+        }
+
+        fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+            if matches!(value, MyEnum::A) {
+                Ok(MyEnumAConstType)
+            } else {
+                Err(value)
+            }
         }
     }
 
@@ -165,6 +200,14 @@ mod tests {
         fn into_value(self) -> MyEnum {
             MyEnum::B
         }
+
+        fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+            if matches!(value, MyEnum::B) {
+                Ok(MyEnumBConstType)
+            } else {
+                Err(value)
+            }
+        }
     }
 
     impl Const<MyEnum> for MyEnumCConstType {
@@ -176,6 +219,14 @@ mod tests {
 
         fn into_value(self) -> MyEnum {
             MyEnum::C
+        }
+
+        fn try_from_value(value: MyEnum) -> Result<Self, MyEnum> {
+            if matches!(value, MyEnum::C) {
+                Ok(MyEnumCConstType)
+            } else {
+                Err(value)
+            }
         }
     }
 
