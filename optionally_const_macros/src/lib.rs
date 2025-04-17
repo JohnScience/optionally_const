@@ -43,9 +43,9 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
     }
 }
 
-/// Derives the const type for a [fieldless enum] as well as the implementations
-/// of the `Const` and `OptionallyConst` traits for the parameterizations
-/// of the const type that represent the enum variants.
+/// Derives the [const type] for a [fieldless enum] as well as the implementations
+/// of the [`Const`] and [`OptionallyConst`] traits for the parameterizations
+/// of the [const type] that represent the enum variants.
 ///
 /// # Example
 ///
@@ -84,6 +84,9 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// ```
 ///
 /// [fieldless enum]: https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.fieldless
+/// [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
+/// [`Const`]: https://docs.rs/optionally_const/latest/optionally_const/trait.Const.html
+/// [`OptionallyConst`]: https://docs.rs/optionally_const/latest/optionally_const/trait.OptionallyConst.html
 #[proc_macro_derive(FieldlessEnumConstType, attributes(const_type))]
 pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input as DeriveInput);

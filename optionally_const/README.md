@@ -174,6 +174,7 @@ fn main() {
 ## Use cases
 
 * **More generic const parameters**: at the moment of writing, only a handful of types can be used as [generic const parameters]. However, with this crate, you can accept `T: Const<U>` where `U` is an enum type.
+* **Higher control over constant propagation in generic contexts**: you can make it more likely to generate function instantiations that will accept fewer parameters at the ABI level, at the cost of higher complexity of the code and higher likelyhood of generic (aka template) bloat.
 
 ## Read more about keyword genericity
 
