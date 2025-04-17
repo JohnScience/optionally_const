@@ -9,7 +9,7 @@ fn find_const_type_attr(attrs: &[syn::Attribute]) -> &syn::Attribute {
         .find(|attr| {
             attr.path()
                 .get_ident()
-                .map_or(false, |ident| ident == "const_type")
+                .is_some_and(|ident| ident == "const_type")
         })
         .unwrap_or_else(|| {
             panic!("Expected #[const_type(ConstTypeName)] attribute");
@@ -17,7 +17,7 @@ fn find_const_type_attr(attrs: &[syn::Attribute]) -> &syn::Attribute {
 }
 
 fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
-    let const_type_name_attr: &syn::Attribute = find_const_type_attr(&attrs);
+    let const_type_name_attr: &syn::Attribute = find_const_type_attr(attrs);
     let meta: &syn::Meta = &const_type_name_attr.meta;
     let syn::Meta::List(list) = meta else {
         panic!("Expected #[const_type(ConstTypeName)] attribute to be a list");
@@ -33,13 +33,12 @@ fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
 }
 
 fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
-    for variant in data_enum.variants.iter() {
-        if !matches!(variant.fields, syn::Fields::Unit) {
-            panic!(
-                "Expected fieldless enum variant, found non-fieldless variant {}",
-                variant.ident
-            );
-        }
+    for variant in &data_enum.variants {
+        assert!(
+            matches!(variant.fields, syn::Fields::Unit),
+            "Expected fieldless enum variant, found non-fieldless variant {}",
+            variant.ident
+        );
     }
 }
 
@@ -87,6 +86,7 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
 /// [`Const`]: https://docs.rs/optionally_const/latest/optionally_const/trait.Const.html
 /// [`OptionallyConst`]: https://docs.rs/optionally_const/latest/optionally_const/trait.OptionallyConst.html
+#[allow(clippy::missing_panics_doc)]
 #[proc_macro_derive(FieldlessEnumConstType, attributes(const_type))]
 pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input as DeriveInput);
@@ -141,6 +141,51 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
         }
     };
 
+    // Originally, the signature of this function was
+    //
+    // ```
+    // #vis fn try_into_const_type_instance<T>
+    // (
+    //     self
+    // ) -> Option<#const_type_ident<{T::VALUE as usize}>>
+    // where
+    //     T: ::optionally_const::Const<#ident>,
+    // ```
+    let try_into_const_type_instance_impls_on_enum: proc_macro2::TokenStream = quote! {
+        impl #ident {
+            #[doc =
+                concat!(
+                    "Converts the enum variant into a [const type] instance.\n\
+                    \n\
+                    This is a code-generated function that was derived with the \
+                    [`#[derive(", stringify!(FieldlessEnumConstType), ")]`]\
+                    (::optionally_const::", stringify!(FieldlessEnumConstType),") \
+                    derive macro.\n\
+                    \n\
+                    This function is supposed to be parameterized by the enum variant's discriminants \
+                    converted to a `usize`.\n\
+                    \n\
+                    For example, `", stringify!(try_into_const_type_instance), "::<{",stringify!(#ident),"::Variant as usize}>()`.\n\
+                    \n\
+                        [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
+                        "
+            )]
+            #vis fn try_into_const_type_instance<const DISCRIMINANT: usize>
+            (
+                self
+            ) -> Option<#const_type_ident<DISCRIMINANT>>
+            where
+                #const_type_ident<DISCRIMINANT>: ::optionally_const::Const<#ident>,
+            {
+                if self as usize == DISCRIMINANT {
+                    Some(#const_type_ident::<DISCRIMINANT>)
+                } else {
+                    None
+                }
+            }
+        }
+    };
+
     let optionally_const_impls: proc_macro2::TokenStream = quote! {
         #(
             impl ::optionally_const::OptionallyConst<#ident> for #const_type_ident<{#ident::#variants as usize}> {
@@ -154,6 +199,7 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     };
 
     let output: proc_macro2::TokenStream = quote! {
+        #try_into_const_type_instance_impls_on_enum
         #const_type_defn
         #const_impls
         #optionally_const_impls

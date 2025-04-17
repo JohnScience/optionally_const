@@ -27,4 +27,10 @@ fn main() {
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::A as usize }>);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::B as usize }>);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::C as usize }>);
+
+    let Some(_const_type_instance) =
+        FieldlessEnum::A.try_into_const_type_instance::<{ FieldlessEnum::A as usize }>()
+    else {
+        panic!("The conversion from a variant to a corresponding const type instance failed");
+    };
 }
