@@ -167,7 +167,7 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
                     \n\
                     For example, `", stringify!(try_into_const_type_instance), "::<{",stringify!(#ident),"::Variant as usize}>()`.\n\
                     \n\
-                    This function is defined on the enum rather than implemented as a trait methods\
+                    This function is defined on the enum rather than implemented as a trait method \
                     because at the time of writing this code, it's impossible to make the trait method `const`.\n\
                     \n\
                     [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type"
