@@ -32,6 +32,13 @@ fn main() {
 }
 ```
 
+## Const type
+
+The const type of type `T` is stipulatively defined as a type whose parameterizations represent various constants
+of type `T`.
+
+The const type for a constant value `const VAL: T` is stipulatively defined as the parametrization of the constant type of `T` that represents this constant.
+
 ## Limitations
 
 * Rust currently doesn't allow defining a type like `struct ConstType<T, const VAL: T>;` because the type of const parameters must not depend on other generic parameters [\[E770\]]. Consequently, one can't provide a canonical "const type" for any const value.
@@ -41,6 +48,43 @@ fn main() {
 ## Optional constness for user-defined types
 
 ### Enums
+
+#### Using a derive macro
+
+```rust
+use optionally_const::{OptionallyConst, FieldlessEnumConstType};
+
+#[derive(FieldlessEnumConstType, Debug)]
+#[const_type(ConstTypeName)]
+enum FieldlessEnum {
+    A,
+    B,
+    C,
+}
+
+fn print_fieldless_enum<T>(value: T)
+where
+    T: OptionallyConst<FieldlessEnum>,
+{
+    if let Some(value) = T::MAYBE_CONST {
+        println!("Const value: {:?}", value);
+    } else {
+        let value: FieldlessEnum = T::into_value(value);
+        println!("Non-const value: {:?}", value);
+    }
+}
+
+fn main() {
+    print_fieldless_enum(FieldlessEnum::A);
+    print_fieldless_enum(FieldlessEnum::B);
+    print_fieldless_enum(FieldlessEnum::C);
+    print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::A as usize }>);
+    print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::B as usize }>);
+    print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::C as usize }>);
+}
+```
+
+#### Using a manual implementation
 
 ```rust
 use optionally_const::Const;
@@ -126,8 +170,6 @@ fn main() {
     print_my_enum(MyEnumCConstType);
 }
 ```
-
-*Note: this can be done even easier with the `FieldlessEnumConstType` derive macro, which is exposed when the `derive` feature is enabled.*
 
 ## Use cases
 

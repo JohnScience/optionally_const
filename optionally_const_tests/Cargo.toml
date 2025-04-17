@@ -4,5 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-optionally_const = { path = "../optionally_const" }
-optionally_const_macros = { path = "../optionally_const_macros" }
+optionally_const = { path = "../optionally_const", features = ["derive"]}

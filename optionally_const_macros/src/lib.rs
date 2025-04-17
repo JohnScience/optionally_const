@@ -1,14 +1,16 @@
 use proc_macro::TokenStream;
 
-use syn::{parse_macro_input, DeriveInput};
 use quote::quote;
+use syn::{DeriveInput, parse_macro_input};
 
-fn find_const_type_attr(
-    attrs: &[syn::Attribute],
-) -> &syn::Attribute {
-    attrs.iter()
-        .find(|attr| attr.path().get_ident()
-            .map_or(false, |ident| ident == "const_type"))
+fn find_const_type_attr(attrs: &[syn::Attribute]) -> &syn::Attribute {
+    attrs
+        .iter()
+        .find(|attr| {
+            attr.path()
+                .get_ident()
+                .map_or(false, |ident| ident == "const_type")
+        })
         .unwrap_or_else(|| {
             panic!("Expected #[const_type(ConstTypeName)] attribute");
         })
@@ -16,8 +18,7 @@ fn find_const_type_attr(
 
 fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
     let const_type_name_attr: &syn::Attribute = find_const_type_attr(&attrs);
-    let meta: &syn::Meta = &const_type_name_attr
-        .meta;
+    let meta: &syn::Meta = &const_type_name_attr.meta;
     let syn::Meta::List(list) = meta else {
         panic!("Expected #[const_type(ConstTypeName)] attribute to be a list");
     };
@@ -26,16 +27,18 @@ fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
         delimiter: _parens,
         tokens,
     } = list;
-    syn::parse2(tokens.clone())
-        .unwrap_or_else(|_| {
-            panic!("Expected #[const_type(ConstTypeName)] attribute to contain a single identifier");
-        })
+    syn::parse2(tokens.clone()).unwrap_or_else(|_| {
+        panic!("Expected #[const_type(ConstTypeName)] attribute to contain a single identifier");
+    })
 }
 
 fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
     for variant in data_enum.variants.iter() {
         if !matches!(variant.fields, syn::Fields::Unit) {
-            panic!("Expected fieldless enum variant, found non-fieldless variant {}", variant.ident);
+            panic!(
+                "Expected fieldless enum variant, found non-fieldless variant {}",
+                variant.ident
+            );
         }
     }
 }
@@ -43,13 +46,13 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// Derives the const type for a [fieldless enum] as well as the implementations
 /// of the `Const` and `OptionallyConst` traits for the parameterizations
 /// of the const type that represent the enum variants.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
 /// use optionally_const::OptionallyConst;
 /// use optionally_const_macros::FieldlessEnumConstType;
-/// 
+///
 /// #[derive(FieldlessEnumConstType, Debug)]
 /// #[const_type(ConstTypeName)]
 /// enum FieldlessEnum {
@@ -57,7 +60,7 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 ///     B,
 ///     C,
 /// }
-/// 
+///
 /// fn print_fieldless_enum<T>(value: T)
 /// where
 ///     T: OptionallyConst<FieldlessEnum>,
@@ -69,7 +72,7 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 ///         println!("Non-const value: {:?}", value);
 ///     }
 /// }
-/// 
+///
 /// fn main() {
 ///     print_fieldless_enum(FieldlessEnum::A);
 ///     print_fieldless_enum(FieldlessEnum::B);
@@ -79,7 +82,7 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 ///     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::C as usize }>);
 /// }
 /// ```
-/// 
+///
 /// [fieldless enum]: https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.fieldless
 #[proc_macro_derive(FieldlessEnumConstType, attributes(const_type))]
 pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
@@ -91,7 +94,7 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
         vis,
         ident,
         generics: _no_generics,
-        data
+        data,
     } = input;
 
     // The identifier of the generic type whose parameterizations will be used to
@@ -107,6 +110,20 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     let variants = data_enum.variants.iter().map(|variant| &variant.ident);
 
     let const_type_defn: proc_macro2::TokenStream = quote! {
+        #[doc =
+            concat!(
+                "A const type for the fieldless enum [`",stringify!(#ident), "`].\n\
+                \n\
+                This is a code-generated type that was derived with the \
+                [`#[derive(", stringify!(FieldlessEnumConstType), ")]`]\
+                (::optionally_const::", stringify!(FieldlessEnumConstType),") \
+                derive macro.\n\
+                \n\
+                This type is supposed to be parameterized by the enum variant's discriminants \
+                converted to a `usize`.\n\
+                \n\
+                For example, `", stringify!(#const_type_ident), "<{",stringify!(#ident),"::Variant as usize}>`."
+        )]
         #vis struct #const_type_ident<const DISCRIMINANT: usize>;
     };
 
@@ -125,7 +142,7 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
         #(
             impl ::optionally_const::OptionallyConst<#ident> for #const_type_ident<{#ident::#variants as usize}> {
                 const MAYBE_CONST: Option<#ident> = Some(#ident::#variants);
-                
+
                 fn into_value(self) -> #ident {
                     #ident::#variants
                 }

@@ -1,5 +1,4 @@
-use optionally_const::OptionallyConst;
-use optionally_const_macros::FieldlessEnumConstType;
+use optionally_const::{FieldlessEnumConstType, OptionallyConst};
 
 #[derive(FieldlessEnumConstType, Debug)]
 #[const_type(ConstTypeName)]
