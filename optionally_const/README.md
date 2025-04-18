@@ -54,8 +54,8 @@ The const type for a constant value `const VAL: T` is stipulatively defined as t
 ```rust
 use optionally_const::{OptionallyConst, FieldlessEnumConstType};
 
-// Clone and Copy derives on the enum are required for the derive macro to work.
-#[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
+// Clone, Copy, and PartialEq derives on the enum are required for the derive macro to work.
+#[derive(FieldlessEnumConstType, Debug, Clone, Copy, PartialEq)]
 #[const_type(
     // You can use any outer attributes you want here.
     // They will be placed verbatim on the generated type. 

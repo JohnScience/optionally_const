@@ -1,6 +1,6 @@
 [package]
 name = "optionally_const"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 authors = ["Dmitrii Demenev <demenev.dmitriy1@gmail.com>"]
 description = "Optional constness on stable Rust."
@@ -19,7 +19,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/JohnScience/optionally_const"
 
 [dependencies]
-optionally_const_macros = { path = "../optionally_const_macros", optional = true, version = "0.6.0" }
+optionally_const_macros = { path = "../optionally_const_macros", optional = true, version = "0.6.1" }
 
 [features]
 derive = ["dep:optionally_const_macros"]

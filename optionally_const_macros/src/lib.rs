@@ -63,8 +63,8 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// use optionally_const::OptionallyConst;
 /// use optionally_const_macros::FieldlessEnumConstType;
 ///
-/// // Clone and Copy derives on the enum are required for the derive macro to work.
-/// #[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
+/// // Clone, Copy, and PartialEq derives on the enum are required for the derive macro to work.
+/// #[derive(FieldlessEnumConstType, Debug, Clone, Copy, PartialEq)]
 /// #[const_type(
 ///     // You can use any outer attributes you want here.
 ///     // They will be placed verbatim on the generated type.
@@ -231,7 +231,7 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
                 }
 
                 fn try_from_value(value: #ident) -> Result<Self, #ident> {
-                    if matches!(<Self as ::optionally_const::Const<#ident>>::VALUE, value) {
+                    if matches!(value, <Self as ::optionally_const::Const<#ident>>::VALUE) {
                         Ok(#const_type_ident)
                     } else {
                         Err(value)
