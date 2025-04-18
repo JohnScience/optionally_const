@@ -66,9 +66,8 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// // Clone, Copy, and PartialEq derives on the enum are required for the derive macro to work.
 /// #[derive(FieldlessEnumConstType, Debug, Clone, Copy, PartialEq)]
 /// #[const_type(
-///     // You can use any outer attributes you want here.
-///     // They will be placed verbatim on the generated type.
-///     #[derive(Clone, Copy)]
+///     // Clone, Copy, and PartialEq derives on the const type are required for the derive macro to work too
+///     #[derive(Clone, Copy, PartialEq)]
 ///     ConstTypeName
 /// )]
 /// enum FieldlessEnum {

@@ -12,6 +12,7 @@ pub use optionally_const_macros::FieldlessEnumConstType;
 
 #[doc(hidden)]
 pub mod hidden {
+    #[derive(Clone, Copy, PartialEq)]
     pub struct ConstTypeBool<const VAL: bool>;
 }
 
@@ -30,7 +31,15 @@ pub type ConstTypeBool<const VAL: bool> = hidden::ConstTypeBool<VAL>;
 /// I.e. `OptionallyConst<T>` is either `T` or `U: Const<T>`.
 ///
 /// See the [`Const`] trait for more information.
-pub trait OptionallyConst<T>: Sized {
+#[diagnostic::on_unimplemented(
+    message = "`OptionallyConst<T>` is implemented for `T: Clone, Copy, PartialEq`\
+        and *should* be implemented for `U: Const<T>`",
+    label = "Optionally const type instance expected here",
+    note = "If `T` doesn't implement `OptionallyConst<T>` (that is, if `{Self}`==`{T}`) \
+        and `{Self}` is local to the crate, \
+        consider adding `#[derive(Clone, Copy, PartialEq)]` on the definition of `T`."
+)]
+pub trait OptionallyConst<T>: Clone + Copy + PartialEq + Sized {
     /// An optional constant value of type `T`.
     ///
     /// If the type does not represent a constant
@@ -47,6 +56,25 @@ pub trait OptionallyConst<T>: Sized {
     /// If the value does not match the value of the optionally constant
     /// type instance, this function will return an error.
     fn try_from_value(value: T) -> Result<Self, T>;
+
+    /// Converts the value of type `U` into an instance of the type.
+    ///
+    /// # Errors
+    ///
+    /// If the `other` value is an instance of a [const type] and `Self` is a parametrization
+    /// of a [const type], this function will return an error if the associated constants on
+    /// `Self` and `U` do not match.
+    ///
+    /// [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
+    fn try_from_another<U>(another: U) -> Result<Self, U>
+    where
+        U: OptionallyConst<T>,
+        T: Clone + Copy + PartialEq,
+    {
+        Self::try_from_value(another.into_value())
+            .ok()
+            .ok_or(another)
+    }
 }
 
 /// A trait whose types-implementors represent a constant value of type `T`.
@@ -61,7 +89,10 @@ impl<const VAL: bool> Const<bool> for ConstTypeBool<VAL> {
 
 // TODO: redefine the impls once negative trait bounds are available
 
-impl<T> OptionallyConst<T> for T {
+impl<T> OptionallyConst<T> for T
+where
+    T: Clone + Copy + PartialEq,
+{
     const MAYBE_CONST: Option<T> = None;
 
     fn into_value(self) -> T {
@@ -143,6 +174,7 @@ mod tests {
         };
     }
 
+    #[derive(Clone, Copy, PartialEq)]
     enum MyEnum {
         A,
         B,
@@ -159,8 +191,11 @@ mod tests {
         }
     }
 
+    #[derive(Clone, Copy, PartialEq)]
     struct MyEnumAConstType;
+    #[derive(Clone, Copy, PartialEq)]
     struct MyEnumBConstType;
+    #[derive(Clone, Copy, PartialEq)]
     struct MyEnumCConstType;
 
     // Ideally, OptionallyConst<T> should be implemented for

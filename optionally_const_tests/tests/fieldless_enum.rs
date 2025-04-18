@@ -29,14 +29,16 @@ where
     }
 }
 
-fn main() {
+fn test_print_fieldless_enum() {
     print_fieldless_enum(FieldlessEnum::A);
     print_fieldless_enum(FieldlessEnum::B);
     print_fieldless_enum(FieldlessEnum::C);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::A as usize }>);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::B as usize }>);
     print_fieldless_enum(ConstTypeName::<{ FieldlessEnum::C as usize }>);
+}
 
+fn test_try_into_const_type_instance() {
     let Ok(_const_type_instance) =
         FieldlessEnum::A.try_into_const_type_instance::<{ FieldlessEnum::A as usize }>()
     else {
@@ -52,7 +54,9 @@ fn main() {
     else {
         panic!("The conversion from a variant to a corresponding const type instance failed");
     };
+}
 
+fn test_maybe_const() {
     assert_eq!(
         ConstTypeName::<{ FieldlessEnum::A as usize }>::MAYBE_CONST,
         Some(FieldlessEnum::A),
@@ -65,7 +69,9 @@ fn main() {
         ConstTypeName::<{ FieldlessEnum::C as usize }>::MAYBE_CONST,
         Some(FieldlessEnum::C),
     );
+}
 
+fn test_try_from_value() {
     assert_eq!(
         ConstTypeName::<{ FieldlessEnum::A as usize }>::try_from_value(FieldlessEnum::A),
         Ok(ConstTypeName::<{ FieldlessEnum::A as usize }>)
@@ -85,4 +91,55 @@ fn main() {
         ConstTypeName::<{ FieldlessEnum::C as usize }>::try_from_value(FieldlessEnum::C),
         Ok(ConstTypeName::<{ FieldlessEnum::C as usize }>)
     );
+}
+
+fn test_try_from_another() {
+    assert_eq!(
+        <ConstTypeName::<{ FieldlessEnum::A as usize }> as OptionallyConst<FieldlessEnum>>::try_from_another(
+            ConstTypeName::<{ FieldlessEnum::A as usize }>,
+        ),
+        Ok(ConstTypeName::<{ FieldlessEnum::A as usize }>)
+    );
+    assert_eq!(
+        <ConstTypeName::<{ FieldlessEnum::A as usize }> as OptionallyConst<FieldlessEnum>>::try_from_another(
+            ConstTypeName::<{ FieldlessEnum::B as usize }>,
+        ),
+        Err(ConstTypeName::<{ FieldlessEnum::B as usize }>)
+    );
+    assert_eq!(
+        <ConstTypeName::<{ FieldlessEnum::A as usize }> as OptionallyConst<FieldlessEnum>>::try_from_another(
+            FieldlessEnum::A,
+        ),
+        Ok(ConstTypeName::<{ FieldlessEnum::A as usize }>)
+    );
+    assert_eq!(
+        <ConstTypeName::<{ FieldlessEnum::A as usize }> as OptionallyConst<FieldlessEnum>>::try_from_another(
+            FieldlessEnum::B,
+        ),
+        Err(FieldlessEnum::B)
+    );
+    assert_eq!(
+        <FieldlessEnum as OptionallyConst<FieldlessEnum>>::try_from_another(
+            ConstTypeName::<{ FieldlessEnum::A as usize }>,
+        ),
+        Ok(FieldlessEnum::A)
+    );
+    assert_eq!(
+        <FieldlessEnum as OptionallyConst<FieldlessEnum>>::try_from_another(
+            ConstTypeName::<{ FieldlessEnum::B as usize }>,
+        ),
+        Err(ConstTypeName::<{ FieldlessEnum::B as usize }>)
+    );
+    assert_eq!(
+        <FieldlessEnum as OptionallyConst<FieldlessEnum>>::try_from_another(FieldlessEnum::A,),
+        Ok(FieldlessEnum::A)
+    );
+}
+
+fn main() {
+    test_print_fieldless_enum();
+    test_try_into_const_type_instance();
+    test_maybe_const();
+    test_try_from_value();
+    test_try_from_another();
 }

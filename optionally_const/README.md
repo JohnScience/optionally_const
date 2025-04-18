@@ -10,6 +10,10 @@ Optional constness on stable Rust.
 
 This crate should be superseded by [keyword genericity](#read-more-about-keyword-genericity) in the future.
 
+## Note on instability of the API
+
+The API of this crate is highly unstable and is likely to frequently change as it is being developed.
+
 ## Usage
 
 ```rust
@@ -57,9 +61,8 @@ use optionally_const::{OptionallyConst, FieldlessEnumConstType};
 // Clone, Copy, and PartialEq derives on the enum are required for the derive macro to work.
 #[derive(FieldlessEnumConstType, Debug, Clone, Copy, PartialEq)]
 #[const_type(
-    // You can use any outer attributes you want here.
-    // They will be placed verbatim on the generated type. 
-    #[derive(Clone, Copy)]
+    // Clone, Copy, and PartialEq derives on the const type are required for the derive macro to work too
+    #[derive(Clone, Copy, PartialEq)]
     ConstTypeName
 )]
 enum FieldlessEnum {
@@ -99,6 +102,7 @@ fn main() {
 ```rust
 use optionally_const::{Const, OptionallyConst};
 
+#[derive(Clone, Copy, PartialEq)]
 enum MyEnum {
     A,
     B,
@@ -115,8 +119,11 @@ impl std::fmt::Display for MyEnum {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
 struct MyEnumAConstType;
+#[derive(Clone, Copy, PartialEq)]
 struct MyEnumBConstType;
+#[derive(Clone, Copy, PartialEq)]
 struct MyEnumCConstType;
 
 // Ideally, OptionallyConst<T> should be implemented for
