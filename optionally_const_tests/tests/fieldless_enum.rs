@@ -1,7 +1,10 @@
 use optionally_const::{FieldlessEnumConstType, OptionallyConst};
 
 #[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
-#[const_type(ConstTypeName)]
+#[const_type(
+    #[derive(Clone, Copy)]
+    ConstTypeName
+)]
 enum FieldlessEnum {
     A,
     B,

@@ -1,6 +1,6 @@
 [package]
 name = "optionally_const_macros"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 authors = ["Dmitrii Demenev <demenev.dmitriy1@gmail.com>"]
 description = "Proc-macro crate for optionally_const."
@@ -24,6 +24,7 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 # 1.0.95
 proc-macro2 = "1"
+derive-syn-parse = "0.2.0"
 
 [dev-dependencies]
 optionally_const = { path = "../optionally_const", features = ["derive"] }

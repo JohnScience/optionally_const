@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
 
+use derive_syn_parse::Parse;
 use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
@@ -16,7 +17,14 @@ fn find_const_type_attr(attrs: &[syn::Attribute]) -> &syn::Attribute {
         })
 }
 
-fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
+#[derive(Parse)]
+struct ConstTypeSyntax {
+    #[call(syn::Attribute::parse_outer)]
+    attrs: Vec<syn::Attribute>,
+    name: syn::Ident,
+}
+
+fn const_type_syntax(attrs: &[syn::Attribute]) -> ConstTypeSyntax {
     let const_type_name_attr: &syn::Attribute = find_const_type_attr(attrs);
     let meta: &syn::Meta = &const_type_name_attr.meta;
     let syn::Meta::List(list) = meta else {
@@ -27,6 +35,7 @@ fn const_type_ident(attrs: &[syn::Attribute]) -> syn::Ident {
         delimiter: _parens,
         tokens,
     } = list;
+
     syn::parse2(tokens.clone()).unwrap_or_else(|_| {
         panic!("Expected #[const_type(ConstTypeName)] attribute to contain a single identifier");
     })
@@ -54,8 +63,14 @@ fn assert_fieldless_enum(data_enum: &syn::DataEnum) {
 /// use optionally_const::OptionallyConst;
 /// use optionally_const_macros::FieldlessEnumConstType;
 ///
+/// // Clone and Copy derives on the enum are required for the derive macro to work.
 /// #[derive(FieldlessEnumConstType, Debug, Clone, Copy)]
-/// #[const_type(ConstTypeName)]
+/// #[const_type(
+///     // You can use any outer attributes you want here.
+///     // They will be placed verbatim on the generated type.
+///     #[derive(Clone, Copy)]
+///     ConstTypeName
+/// )]
 /// enum FieldlessEnum {
 ///     A,
 ///     B,
@@ -104,7 +119,10 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
 
     // The identifier of the generic type whose parameterizations will be used to
     // represent the const values of the enum variants.
-    let const_type_ident: syn::Ident = const_type_ident(&attrs);
+    let ConstTypeSyntax {
+        attrs: const_type_attrs,
+        name: const_type_ident,
+    } = const_type_syntax(&attrs);
 
     let syn::Data::Enum(data_enum) = data else {
         panic!("#[derive(FieldlessEnumConstType)] can only be used on enums.");
@@ -117,18 +135,26 @@ pub fn derive_fieldless_enum_const_type(input: TokenStream) -> TokenStream {
     let const_type_defn: proc_macro2::TokenStream = quote! {
         #[doc =
             concat!(
-                "A const type for the fieldless enum [`",stringify!(#ident), "`].\n\
+                "A [const type] for the [fieldless enum] [`",stringify!(#ident), "`].\n\
                 \n\
                 This is a code-generated type that was derived with the \
                 [`#[derive(", stringify!(FieldlessEnumConstType), ")]`]\
                 (::optionally_const::", stringify!(FieldlessEnumConstType),") \
                 derive macro.\n\
                 \n\
-                This type is supposed to be parameterized by the enum variant's discriminants \
+                This type is supposed to be parameterized by the enum variant's [discriminant]s \
                 converted to a `usize`.\n\
                 \n\
-                For example, `", stringify!(#const_type_ident), "<{",stringify!(#ident),"::Variant as usize}>`."
+                For example, `", stringify!(#const_type_ident), "<{",stringify!(#ident),"::Variant as usize}>`.\n\
+                \n\
+                [const type]: https://github.com/JohnScience/optionally_const/tree/main/optionally_const#const-type
+                [fieldless enum]: https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.fieldless
+                [discriminant]: https://doc.rust-lang.org/reference/items/enumerations.html#discriminants
+                "
         )]
+        #(
+            #const_type_attrs
+        )*
         #vis struct #const_type_ident<const DISCRIMINANT: usize>;
     };
 
